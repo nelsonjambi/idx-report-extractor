@@ -1,34 +1,42 @@
 # WIFI – PT Solusi Sinergi Digital Tbk  
-## Annual Report 2025 · Financial Statements Extraction
+## Financial Statements Workbook — FY2024 & FY2025
 
 **Ticker:** WIFI  
 **Company:** PT Solusi Sinergi Digital Tbk (and Subsidiaries)  
-**Fiscal Year:** 31 December 2025  
-**Source:** `reports/WIFI_Annual_Report_2025.pdf` (414 pages)  
 **Output:** `WIFI_Financial_Statements.xlsx`  
-**Generated:** 2026-05-15  
-**Template:** `skill/idx-excel-run1-template.md` (Run 1 — single-year template)
+**Last Updated:** 2026-05-15  
+
+---
+
+## Extraction History
+
+| Run | Skill | Source PDF | FY | Status |
+|---|---|---|---|---|
+| Run 1 | `idx-excel-run1-template.md` | `WIFI_Annual_Report_2025.pdf` (414 pp) | 2025 | ✅ Complete |
+| Run 2 | `idx-excel-append-year.md` | `WIFI_Annual_Report_2024.pdf` (339 pp) | 2024 | ✅ Complete |
 
 ---
 
 ## Audit Status
 
-| Item | Detail |
-|---|---|
-| Document Type | Annual Report (Laporan Tahunan) |
-| Audit Status | **AUDITED** — Independent Auditor's Report present (pp. 228–234, scanned images) |
-| Statement Type | **CONSOLIDATED** (Konsolidasian) |
-| Currency | IDR (Rupiah penuh / full Rupiah) |
+| Item | FY2025 | FY2024 |
+|---|---|---|
+| Document Type | Annual Report (Laporan Tahunan) | Annual Report (Laporan Tahunan) |
+| Audit Status | **AUDITED** — scanned auditor report pp. 228–234 | **AUDITED** — ANWAR & REKAN, pp. 197–202 |
+| Statement Type | **CONSOLIDATED** (Konsolidasian) | **CONSOLIDATED** (Konsolidasian) |
+| Currency | IDR (Rupiah penuh) | IDR (Rupiah penuh) |
 
 ---
 
 ## PDF Structure
 
+### FY2025 — `WIFI_Annual_Report_2025.pdf` (414 pages)
+
 | Section | Pages |
 |---|---|
-| Front Matter (Annual Report narrative) | 1–222 |
-| Financial Report section divider | 223 |
-| Cover + Table of Contents | 224–226 |
+| Front Matter | 1–222 |
+| FS section divider | 223 |
+| Cover + TOC | 224–226 |
 | Director's Statement | 227 |
 | Independent Auditor's Report (scanned) | 228–234 |
 | **Balance Sheet** | **235–237** |
@@ -36,6 +44,19 @@
 | **Changes in Equity** | **240–241** |
 | **Cash Flow Statement** | **242–243** |
 | **Notes to Financial Statements** | **244–414** |
+
+### FY2024 — `WIFI_Annual_Report_2024.pdf` (339 pages)
+
+| Section | Pages |
+|---|---|
+| Front Matter | 1–193 |
+| FS cover + TOC | 194–196 |
+| Independent Auditor's Report (ANWAR & REKAN) | 197–202 |
+| **Balance Sheet** | **203–205** |
+| **Income Statement** | **206–207** |
+| **Changes in Equity** | **208–209** |
+| **Cash Flow Statement** | **210** |
+| **Notes to Financial Statements** | **211–339** |
 
 ---
 
@@ -46,40 +67,46 @@
 | 1 | Balance Sheet | Consolidated Statement of Financial Position |
 | 2 | Income Statement | Consolidated Statement of P&L and Other Comprehensive Income |
 | 3 | Cash Flow Statement | Consolidated Statement of Cash Flows |
-| 4 | Changes in Equity | Consolidated Statement of Changes in Equity |
+| 4 | Changes in Equity | Consolidated Statement of Changes in Equity (2023→2024→2025) |
 | 5–48 | Note 1–44 | Notes to the Consolidated Financial Statements |
 | 49 | Key Ratios Summary | Liquidity, Leverage, Profitability, Efficiency, Cash Flow ratios |
 
----
-
-## Key Financial Highlights — FY2025
-
-| Metric | FY2025 (IDR) |
-|---|---|
-| Pendapatan / Revenue | 1,659,396,069,858 |
-| Laba Bruto / Gross Profit | 1,126,634,964,753 |
-| Laba Usaha / Operating Profit | 955,426,280,338 |
-| Laba Neto / Net Profit | 632,902,896,073 |
-| Total Aset / Total Assets | 15,169,662,226,172 |
-| Total Liabilitas / Total Liabilities | 6,651,717,373,155 |
-| Total Ekuitas / Total Equity | 8,517,944,853,017 |
-| Kas & Setara Kas / Cash & Equivalents | 6,164,698,518,517 |
-
-| Ratio | FY2025 |
-|---|---|
-| Gross Margin | 67.9% |
-| Operating Margin | 57.6% |
-| Net Margin | 38.1% |
-| ROE | 7.4% |
-| ROA | 4.2% |
-| Current Ratio | 2.18x |
-| Debt-to-Equity | 0.78x |
-| Interest Coverage | 3.05x |
-| Free Cash Flow | (4,758,179,933,410) |
+**Column layout:** Column B = FY2024, Column C = FY2025 (oldest left, newest right)
 
 ---
 
-## Validation Results (all PASS)
+## Key Financial Highlights — Comparative
+
+| Metric | FY2024 (IDR) | FY2025 (IDR) | YoY Change |
+|---|---|---|---|
+| Pendapatan / Revenue | 671,854,001,272 | 1,659,396,069,858 | +147% |
+| Laba Bruto / Gross Profit | 414,773,313,888 | 1,126,634,964,753 | +172% |
+| Laba Usaha / Operating Profit | 344,891,256,050 | 955,426,280,338 | +177% |
+| Laba Neto / Net Profit | 229,278,471,503 | 632,902,896,073 | +176% |
+| Total Aset / Total Assets | 2,907,415,732,374 | 15,169,662,226,172 | +422% |
+| Total Liabilitas / Total Liabilities | 1,937,572,403,183 | 6,651,717,373,155 | +243% |
+| Total Ekuitas / Total Equity | 969,843,329,191 | 8,517,944,853,017 | +778% |
+| Kas & Setara Kas / Cash | 18,495,026,165 | 6,164,698,518,517 | +33,244% |
+
+---
+
+## Key Ratios — Comparative
+
+| Ratio | FY2024 | FY2025 |
+|---|---|---|
+| Gross Margin | 61.7% | 67.9% |
+| Operating Margin | 51.3% | 57.6% |
+| Net Margin | 34.1% | 38.1% |
+| ROE | 23.6% | 7.4% |
+| ROA | 7.9% | 4.2% |
+| Current Ratio | 1.005x | 2.18x |
+| Debt-to-Equity | 2.00x | 0.78x |
+| Interest Coverage | 4.72x | 3.06x |
+| Free Cash Flow | (1,060,085,320,119) | (3,517,946,037,956) |
+
+---
+
+## Validation Results — FY2024 (all PASS)
 
 | Check | Result |
 |---|---|
@@ -87,72 +114,79 @@
 | BS: Current + Non-Current = Total Assets | ✅ PASS |
 | BS: Current + Non-Current Liab = Total Liab | ✅ PASS |
 | IS: Revenue − COGS = Gross Profit | ✅ PASS |
-| IS: PBT − Tax = Net Profit | ✅ PASS |
-| IS: Attribution sum = Net Profit | ✅ PASS |
 | CF: Operating + Investing + Financing = ΔCash | ✅ PASS |
 | CF: Beginning + ΔCash = Ending Cash | ✅ PASS |
 | Cross: CF Ending Cash = BS Cash | ✅ PASS |
-| Cross: IS Net Profit = Equity Net Profit | ✅ PASS |
+| Cross: IS Net Profit = Attribution Total | ✅ PASS |
 
 ---
 
-## Notes Index
+## Note Numbering — 2024 vs 2025
 
-| Note | Indonesian Title | English Title | Pages |
+The 2024 Annual Report uses different note numbers from the 2025 report. All note sheets are labeled with 2025 numbering (as workbook template); renumbering footnotes are added to each affected sheet.
+
+| 2025 Sheet (Workbook) | Topic | 2024 Note # | Status |
 |---|---|---|---|
-| 1 | UMUM | GENERAL | 244–260 |
-| 2 | INFORMASI KEBIJAKAN AKUNTANSI MATERIAL | SIGNIFICANT ACCOUNTING POLICIES | 261–279 |
-| 3 | ESTIMASI DAN PERTIMBANGAN AKUNTANSI | ACCOUNTING ESTIMATES AND JUDGMENTS | 280–284 |
-| 4 | KAS DAN SETARA KAS | CASH AND CASH EQUIVALENTS | 285 |
-| 5 | PIUTANG USAHA | TRADE RECEIVABLES | 286 |
-| 6 | PERSEDIAAN | INVENTORIES | 287 |
-| 7 | BEBAN DIBAYAR DI MUKA DAN ASET LANCAR LAINNYA | PREPAID EXPENSES AND OTHER CURRENT ASSETS | 288 |
-| 8 | UANG MUKA | ADVANCES | 288 |
-| 9 | DANA YANG DIBATASI PENGGUNAANNYA | RESTRICTED FUND | 289 |
-| 10 | ASET TETAP | FIXED ASSETS | 290–292 |
-| 11 | ASET TAKBERWUJUD | INTANGIBLE ASSETS | 293 |
-| 12 | ASET LAIN-LAIN | OTHER ASSETS | 294 |
-| 13 | UTANG USAHA | TRADE PAYABLES | 295 |
-| 14 | UTANG LAIN-LAIN | OTHER PAYABLES | 295–296 |
-| 15 | BEBAN AKRUAL | ACCRUED EXPENSES | 297 |
-| 16 | UANG MUKA PENJUALAN | ADVANCES FROM CUSTOMERS | 298 |
-| 17 | LIABILITAS SEWA | LEASE LIABILITIES | 298–299 |
-| 18 | UTANG BANK JANGKA PENDEK | SHORT-TERM BANK LOANS | 300–307 |
-| 19 | PERPAJAKAN | TAXATION | 308–311 |
-| 20 | UTANG PEMBIAYAAN KONSUMEN | CONSUMER FINANCING PAYABLES | 312 |
-| 21 | UTANG BANK JANGKA PANJANG | LONG-TERM BANK LOANS | 313–327 |
-| 22 | UTANG OBLIGASI | BONDS PAYABLE | 328–330 |
-| 23 | PINJAMAN | LOANS | 331–337 |
-| 24 | UTANG PIHAK BERELASI | DUE TO RELATED PARTIES | 338–341 |
-| 25 | SUKUK | SHARIA BONDS | 342–343 |
-| 26 | LIABILITAS IMBALAN KERJA | EMPLOYEE BENEFITS LIABILITY | 344–345 |
-| 27 | MODAL SAHAM DAN UANG MUKA SETORAN MODAL | SHARE CAPITAL AND ADVANCE FOR STOCK SUBSCRIPTION | 346 |
-| 28 | TAMBAHAN MODAL DISETOR | ADDITIONAL PAID-IN CAPITAL | 347 |
-| 29 | KEPENTINGAN NONPENGENDALI | NON-CONTROLLING INTERESTS | 348 |
-| 30 | PENDAPATAN USAHA - NETO | REVENUES - NET | 348 |
-| 31 | BEBAN POKOK PENDAPATAN | COSTS OF REVENUES | 349 |
-| 32 | BEBAN UMUM DAN ADMINISTRASI | GENERAL AND ADMINISTRATIVE EXPENSES | 349 |
-| 33 | PENGHASILAN (BEBAN) LAIN-LAIN | OTHER INCOME (EXPENSES) | 350 |
-| 34 | PENGHASILAN KEUANGAN | FINANCE INCOME | 350 |
-| 35 | BIAYA KEUANGAN | FINANCE COSTS | 350 |
-| 36 | LABA NETO PER SAHAM | EARNINGS PER SHARE | 350 |
-| 37 | INFORMASI PIHAK-PIHAK BERELASI | RELATED PARTY INFORMATION | 351 |
-| 38 | INSTRUMEN KEUANGAN | FINANCIAL INSTRUMENTS | 352 |
-| 39 | KEBIJAKAN DAN TUJUAN MANAJEMEN RISIKO KEUANGAN | FINANCIAL RISK MANAGEMENT POLICIES AND OBJECTIVES | 352–354 |
-| 40 | INFORMASI SEGMEN | SEGMENT INFORMATION | 355 |
-| 41 | INFORMASI TAMBAHAN ARUS KAS | SUPPLEMENTARY CASH FLOW INFORMATION | 356 |
-| 42 | PERJANJIAN PENTING | SIGNIFICANT AGREEMENTS | 357–402 |
-| 43 | PERISTIWA SETELAH PERIODE PELAPORAN | EVENTS AFTER REPORTING PERIOD | 403–410 |
-| 44 | PENERBITAN AMENDEMEN DAN PENYESUAIAN | ISSUANCE OF AMENDMENTS AND IMPROVEMENTS | 411–414 |
+| Note 1 | GENERAL | 1 | ✅ Same |
+| Note 2 | SIGNIFICANT ACCOUNTING POLICIES | 2 | ✅ Same |
+| Note 3 | ACCOUNTING ESTIMATES | 3 | ✅ Same |
+| Note 4 | CASH AND CASH EQUIVALENTS | 4 | ✅ Same |
+| Note 5 | TRADE RECEIVABLES | 5 | ✅ Same |
+| Note 6 | INVENTORIES | — | ⚪ Not in 2024 |
+| Note 7 | PREPAID EXPENSES | 6 | 🔁 Renumbered |
+| Note 8 | ADVANCES | 7 | 🔁 Renumbered |
+| Note 9 | RESTRICTED FUND | — | ⚪ Not in 2024 |
+| Note 10 | FIXED ASSETS | 8 | 🔁 Renumbered |
+| Note 11 | INTANGIBLE ASSETS | 9 | 🔁 Renumbered |
+| Note 12 | OTHER ASSETS | — | ⚪ Not in 2024 |
+| Note 13–17 | Trade/Other Payables, Accrued, Advances, Lease | 10–14 | 🔁 All renumbered |
+| Note 18 | SHORT-TERM BANK LOANS | — | ⚪ Not in 2024 |
+| Note 19–24 | Taxation, Consumer Finance, Bank Loans, Bonds, Loans, Related Parties | 15–20 | 🔁 All renumbered |
+| Note 25 | SHARIA BONDS (SUKUK) | — | ⚪ Not in 2024 (Sukuk issued 2025) |
+| Note 26–44 | Employee Benefits through Amendments | 21–39 | 🔁 All renumbered |
+
+---
+
+## FY2024 Balance Sheet Differences vs FY2025 Template
+
+Items in 2025 template **not present** in 2024 (cells left empty):
+- Piutang lain-lain / Other receivables (current)
+- Persediaan / Inventories
+- Dana yang dibatasi penggunaannya / Restricted fund (non-current)
+- Goodwill
+- Aset lain-lain / Other assets (non-current)
+- Utang usaha - Pihak berelasi / Trade payables to related parties
+- Utang pihak berelasi / Due to related parties (current)
+- Utang bank jangka pendek / Short-term bank loans (standalone)
+- Sukuk (current and non-current)
+- Selisih nilai transaksi dengan entitas nonpengendali / NCI transaction difference
+- Saldo laba ditentukan / Appropriated retained earnings
+
+Items in 2024 **not in 2025 template** (new rows with 2024 value):
+- Uang muka pembelian aset tetap (non-current) = 0
+- Taksiran tagihan pajak penghasilan = 0
+- Uang muka setoran modal = 0
+
+---
+
+## Changes in Equity — Correction
+
+The opening balance at January 1, 2024 in the workbook was **corrected** in Run 2 using the 2024 Annual Report. The original value was extracted from the mirrored/rotated equity pages (pp. 240–241) of the 2025 Annual Report, resulting in an incorrect opening balance.
+
+| Item | Previous (wrong) | Corrected |
+|---|---|---|
+| Total Equity, Dec 31, 2023 (opening 2024) | 969,843,329,191 | **742,645,974,247** |
 
 ---
 
 ## Warnings & Caveats
 
-1. **Equity Statement (pp.240–241):** These pages use a mirrored/rotated text layout in the PDF. Line-item values were reconstructed from reversed text strings and cross-validated against the Balance Sheet equity totals (which are unambiguous).
-2. **Auditor's Report (pp.228–234):** Pages are scanned images with no text layer. The audit status is confirmed from the Table of Contents reference on p.226 and the financial statement headers.
-3. **Single-year only:** Per `idx-excel-run1-template.md` rules, only FY2025 data is extracted. The FY2024 comparative column visible in the PDF is intentionally not included — it will be added via `idx-excel-append-year.md` in a future run.
-4. **Future use:** This workbook is designed as the template for multi-year appending. Run 2+ should load this file and insert prior-year columns to the left of Column B.
+1. **Note sub-line data (2024):** Detailed sub-line values within note sheets were not extracted for FY2024. The main statement totals (BS, IS, CF) are fully populated and validated. Note sheets show the 2024 year header and carry a comment directing to the 2024 PDF for detail.
+2. **2024 NCI:** Non-controlling interests had **net losses** in 2024 (NCI net profit = −1,908,308,511), reducing consolidated net profit.
+3. **2024 equity structure:** "Saldo laba" is a single line in 2024 (not split into appropriated/unappropriated as in 2025). Mapped to the "unappropriated" row with a comment.
+4. **Cash comparison:** Cash at Dec 31, 2024 = IDR 18.5B vs Dec 31, 2025 = IDR 6.16T — the massive increase reflects the PMTHMETD I capital raise and new bond/sukuk issuances in 2025.
+5. **Equity jump (2024→2025):** Total equity grew 778% from IDR 970B to IDR 8.52T due to PMTHMETD I new share issuance (IDR 5.6T) and subsidiary capital injection (IDR 1T) in 2025.
+6. **Equity pages 2025:** Pages 240–241 of the 2025 Annual Report use a mirrored/rotated layout (see `lesson.md` Lesson 3). Opening balance was reconstructed; this was corrected in Run 2 using the 2024 Annual Report source.
 
 ---
 
@@ -161,12 +195,16 @@
 ```
 idx-report-extractor/
 ├── reports/
+│   ├── WIFI_Annual_Report_2024.pdf        # Source (339 pages)
 │   └── WIFI_Annual_Report_2025.pdf        # Source (414 pages)
 ├── skill/
-│   ├── idx-excel-run1-template.md         # Skill used for this extraction
-│   ├── idx-excel-quarterly.md
-│   └── idx-excel-append-year.md
-├── WIFI_Financial_Statements.xlsx          # Output workbook (49 sheets)
-├── extract_wifi_fs.py                      # Extraction script
-└── README-001-wifi.md                      # This file
+│   ├── idx-excel-run1-template.md         # Used for Run 1
+│   ├── idx-excel-append-year.md           # Used for Run 2
+│   └── idx-excel-quarterly.md
+├── WIFI_Financial_Statements.xlsx          # Output workbook (49 sheets, 2 years)
+├── WIFI_Financial_Statements_backup_before_2024.xlsx  # Backup before Run 2
+├── append_2024_wifi.py                    # Run 2 extraction script
+├── extract_wifi_fs.py                     # Run 1 extraction script
+├── lesson.md                              # Lessons learned (FY2025 extraction)
+└── README-001-wifi.md                     # This file
 ```
