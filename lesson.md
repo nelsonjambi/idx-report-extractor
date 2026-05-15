@@ -239,3 +239,96 @@ The 2024 Annual Report equity statement had a dedicated "Uang Muka Setoran Modal
 | 14 | Many BS line items absent in earlier year | Nine empty rows | Empty + comment is correct; total balance check confirms |
 | 15 | Retained earnings splits between years | Unmappable rows | Map single "Saldo laba" to unappropriated row; leave appropriated empty |
 | 16 | Advance for stock subscription column not in template | Opening equity sub-total mismatch | Fold into combined equity column; document in comment |
+
+---
+
+## Run 3 — FY2023 Append
+
+**Date:** 2026-05-15  
+**Source:** `reports/WIFI_Annual Report_2023.pdf` (292 pages)  
+**Skill:** `skill/idx-excel-append-year.md` Run 3
+
+---
+
+## 17. Note heading scanner misidentifies commitment sub-items as top-level notes
+
+**What happened:**  
+The automated note header scanner found "Note 5" at page 273 and "Note 6" at page 275, both of which are actually numbered sub-items inside Note 37 (Ikatan dan Kontinjensi / Commitments). The 2023 PDF's commitments section uses a numbered sub-list (e.g., "5. Perjanjian Kerjasama Pengolahan Data") that happens to match the `^\d{1,2}\.\s+[A-Z]` pattern. Similarly, "7. Opsi Konversi" at page 251 is a sub-item of Note 37, not a top-level note.
+
+**Fix / rule to add:**  
+- When building the note index, use ONLY pages in the first pass (pages ≤ the start of Note 37 / Commitments section) to identify top-level note headers. Notes 37+ typically have dense numbered sub-lists that poison the regex scan.
+- Cross-reference the note index against the FS TOC (Table of Contents) which lists note titles and page numbers at the start of the notes section. The TOC is authoritative for which entries are top-level notes.
+- Any "note" found after page 260 (for a 292-page PDF) that isn't in the TOC should be treated as a sub-item.
+
+---
+
+## 18. Taksiran tagihan pajak penghasilan is a non-current asset with no template row
+
+**What happened:**  
+The 2023 Balance Sheet includes "Taksiran tagihan pajak penghasilan / Estimated income tax claim for refund" = IDR 242,314,336 in non-current assets. The 2024 script noted this as a "new row with 2024 value = 0" in the README but did not actually insert a dedicated row. In 2023, the value is non-zero and must be included to make the non-current total balance.
+
+**Fix / rule to add:**  
+- Map "Taksiran tagihan pajak penghasilan" to the "Aset lain-lain / Other assets" row (r25) with a cell comment explaining the mapping. This is acceptable because (a) "Other assets" is a catch-all non-current row, (b) the amount is small relative to total non-current assets (~0.019%), and (c) inserting a new row would cascade row number changes throughout the extraction script.
+- If the amount were material (>1% of total assets), insert a dedicated new row per the skill rules.
+- This mapping decision should be documented in the BS footnote row and in the README.
+
+---
+
+## 19. Equity statement PDF has 2,000 IDR discrepancy vs Balance Sheet
+
+**What happened:**  
+The 2023 Changes in Equity statement (p.178) shows the closing Dec 31, 2023 total as IDR 742,645,972,247, while the Balance Sheet (p.174) shows IDR 742,645,974,247 — a difference of exactly IDR 2,000. Tracing back, the equity statement shows "Uang muka setoran modal" as 71,783,329,590 while the Balance Sheet shows 71,783,331,590 (2,000 higher).
+
+**Fix / rule to add:**  
+- The Balance Sheet is always authoritative over the equity statement for closing balances. Use the BS value.
+- The 2,000 IDR difference is a consistent PDF extraction artifact: the OCR in the equity statement dropped 2 from one digit in a single number. This is below materiality and requires only a cell comment, not a restatement.
+- When verifying equity closing balance across statements, a difference of exactly a round number (e.g., 2,000 / 10,000 / 100,000) is typically an OCR digit-drop artifact, not a real discrepancy.
+
+---
+
+## 20. Income tax can be a net benefit (negative expense) in some years
+
+**What happened:**  
+The 2023 IS shows "BEBAN (MANFAAT) PAJAK PENGHASILAN - NETO" as "(9,318,897,299)". The parentheses around the figure follow Indonesian accounting convention (negative = expense when shown under an expense-framed label). PBT (67,575,618,404) − Tax expense (9,318,897,299) = Net Profit (58,256,721,105). This is a net expense year. In contrast, had the figure appeared without parentheses under the same label, it would indicate a tax BENEFIT that increases net income.
+
+**Fix / rule to add:**  
+- Always verify tax direction by computing: Tax = PBT − Net Profit. If the result is positive, it is an expense (cell value = negative). If negative, it is a benefit (cell value = positive).
+- The parentheses in the PDF indicate the SIGN of the value in Indonesian FS format, not the direction of income tax. A "(9,318,897,299)" under "Beban (Manfaat) Pajak" = tax expense IDR 9,318,897,299 to be subtracted from PBT.
+- The workbook stores this as −9,318,897,299 (negative) so it subtracts from PBT when summing.
+
+---
+
+## 21. Two-year note renumbering compounds: each prior-year append adds new shift layers
+
+**What happened:**  
+For FY2024, notes shifted by up to +5 positions vs FY2025. For FY2023, notes shifted by +1 vs FY2024 for most notes (Notes 11–39 in 2023 = Notes 10–38 in 2024), plus Notes 22 (Bonds), 25 (Sukuk), and some additional notes that don't exist at all in 2023. The cumulative shift from 2023 to 2025 for some notes is +6 positions (e.g., workbook Note 13 = 2024 Note 10 = 2023 Note 11).
+
+**Fix / rule to add:**  
+- Always build the note index fresh from the SOURCE PDF for each run. Never infer 2023 note numbers by subtracting from 2024 note numbers.
+- The note index should list every unique note title from the source PDF's notes section, then match by title to the workbook sheets. The correct mapping flows from title similarity, not arithmetic on note numbers.
+- When adding a third year, maintain a three-column mapping table (2025 sheet, 2024 note, 2023 note) rather than a two-column one, since the compounding shifts make arithmetic inference unreliable.
+
+---
+
+## 22. For older years, Changes in Equity sheet needs ROW insertions, not column insertions
+
+**What happened:**  
+The Changes in Equity sheet uses ROWS to represent equity movements across time (unlike the main statements which use COLUMNS for years). When appending an older year, the 2023 movements must be inserted as new rows BEFORE the current opening-of-2024 row. This requires `insert_rows()` in openpyxl rather than `insert_cols()`. The 2024 append only corrected existing values; the 2023 append needed 7 new rows (1 opening + 6 transactions).
+
+**Fix / rule to add:**  
+- Before writing the extraction script, explicitly determine whether the Changes in Equity sheet uses row-per-year-period or column-per-year format.
+- For row-per-period format: use `ws_eq.insert_rows(first_row, count)` to insert before the target row. Verify that existing row data (2024 and 2025 blocks) shifts down correctly after insertion.
+- After row insertion, spot-check that: (a) opening of 2024 block = closing of 2023 block, (b) closing of 2024 block = opening of 2025 block, (c) all closing totals match the BS Total Equity for the same year.
+
+---
+
+## Summary Table — Run 3 (FY2023 Append)
+
+| # | Lesson | Impact | Mitigation |
+|---|---|---|---|
+| 17 | Note header scanner picks up commitment sub-items as top-level notes | False note index entries | Use TOC confirmation; stop scanning after Note 36 page range |
+| 18 | Taksiran tagihan pajak has no template row | Missing 242M from NC total | Map to Aset lain-lain row; document in comment |
+| 19 | Equity statement vs BS: 2,000 IDR OCR discrepancy | Minor closing balance mismatch | BS is authoritative; comment + note in README |
+| 20 | Income tax parentheses: expense not benefit | Wrong sign for net profit | Verify tax = PBT − Net Profit from IS figures |
+| 21 | Note numbering shifts compound across three years | 2023 shifts differ from 2024 shifts | Build note index fresh from each source PDF |
+| 22 | Changes in Equity needs row insertions for older years | 2023 movements missing from sheet | Use `insert_rows()` before the existing 2024 opening row |
