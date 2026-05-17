@@ -68,10 +68,11 @@
 | 2 | Income Statement | Consolidated Statement of P&L and Other Comprehensive Income |
 | 3 | Cash Flow Statement | Consolidated Statement of Cash Flows |
 | 4 | Changes in Equity | Consolidated Statement of Changes in Equity (2023→2024→2025) |
-| 5–48 | Note 1–44 | Notes to the Consolidated Financial Statements |
-| 49 | Key Ratios Summary | Liquidity, Leverage, Profitability, Efficiency, Cash Flow ratios |
+| 5 | **Note Index** | **Cross-year reference: 2024 note number/title vs 2025 note number/title** |
+| 6–49 | Note 1–44 | Notes to the Consolidated Financial Statements |
+| 50 | Key Ratios Summary | Liquidity, Leverage, Profitability, Efficiency, Cash Flow ratios |
 
-**Column layout:** Column B = FY2024, Column C = FY2025 (oldest left, newest right). Key Ratios sheet has year headers in row 4; main statement sheets (BS, IS, CF) and note sheets have year headers in row 3.
+**Column layout:** Column B = FY2024, Column C = FY2025 (oldest left, newest right). Key Ratios sheet has year headers in row 4; main statement sheets (BS, IS, CF) and note sheets have year headers in row 3. The Note Index sheet has column headers in row 2.
 
 ---
 
@@ -123,7 +124,7 @@
 
 ## Note Numbering — 2024 vs 2025
 
-The 2024 Annual Report uses different note numbers from the 2025 report. All note sheets are labeled with 2025 numbering (as workbook template); renumbering footnotes are added to each affected sheet.
+The 2024 Annual Report uses different note numbers from the 2025 report. All note sheets are labeled with 2025 numbering (as workbook template); renumbering footnotes are added to each affected sheet. A dedicated **Note Index** sheet (sheet #5, between Changes in Equity and Note 1) shows the side-by-side title in each year for every workbook note sheet.
 
 | 2025 Sheet (Workbook) | Topic | 2024 Note # | Status |
 |---|---|---|---|
@@ -187,7 +188,7 @@ Reconciliation 2024 (now passes): opening 742,645,974,247 + movements 227,197,35
 
 ## Warnings & Caveats
 
-1. **Note sub-line data (2024):** Sub-line values were extracted for Note 4 (Cash) and Note 5 (Trade Receivables) and reconcile to the Balance Sheet. For the remaining note sheets, the 2024 column carries the year header plus a cell comment pointing to the source page in the 2024 PDF; main statement totals (BS, IS, CF) are fully populated and validated.
+1. **Note sub-line data (2024):** Sub-line values extracted and cross-validated against the Balance Sheet for: Note 4 (Cash), Note 5 (Trade Receivables), Note 7 (Prepaid Expenses), Note 8 (Advances), Note 13 (Trade Payables), Note 14 (Other Payables), Note 15 (Accrued Expenses), Note 16 (Advances from Customers), Note 17 (Lease Liabilities), Note 20 (Consumer Financing), Note 21 (Bank Loans), Note 22 (Bonds Payable), Note 23 (Loans), Note 24 (Due to Related Parties), Note 26 (Employee Benefits), Note 27 (Share Capital), Note 28 (APIC), Note 29 (NCI), Note 30 (Revenues), Note 31 (COGS), Note 33 (Other Income/Expense), Note 34 (Finance Income), Note 35 (Finance Costs), Note 36 (EPS). For narrative-only notes (1, 2, 3, 32, 37–44), the 2024 column carries the year header plus a cell comment pointing to the source page in the 2024 PDF.
 2. **2024 NCI:** Non-controlling interests had **net losses** in 2024 (NCI net profit = −1,908,308,511), reducing consolidated net profit.
 3. **2024 equity structure:** "Saldo laba" is a single line in 2024 (not split into appropriated/unappropriated as in 2025). Mapped to the "unappropriated" row with a comment.
 4. **Cash comparison:** Cash at Dec 31, 2024 = IDR 18.5B vs Dec 31, 2025 = IDR 6.16T — the massive increase reflects the PMTHMETD I capital raise and new bond/sukuk issuances in 2025.
