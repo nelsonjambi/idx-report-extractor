@@ -4,7 +4,7 @@
 **Ticker:** WIFI  
 **Company:** PT Solusi Sinergi Digital Tbk (and Subsidiaries)  
 **Output:** `WIFI_Financial_Statements.xlsx`  
-**Last Updated:** 2026-05-15  
+**Last Updated:** 2026-05-17  
 
 ---
 
@@ -13,7 +13,7 @@
 | Run | Skill | Source PDF | FY | Status |
 |---|---|---|---|---|
 | Run 1 | `idx-excel-run1-template.md` | `WIFI_Annual_Report_2025.pdf` (414 pp) | 2025 | ✅ Complete |
-| Run 2 | `idx-excel-append-year.md` | `WIFI_Annual_Report_2024.pdf` (339 pp) | 2024 | ✅ Complete |
+| Run 2 | `idx-excel-append-year.md` | `WIFI_Annual_Report_2024.pdf` (339 pp) | 2024 | ✅ Complete (re-executed 2026-05-17) |
 
 ---
 
@@ -71,7 +71,7 @@
 | 5–48 | Note 1–44 | Notes to the Consolidated Financial Statements |
 | 49 | Key Ratios Summary | Liquidity, Leverage, Profitability, Efficiency, Cash Flow ratios |
 
-**Column layout:** Column B = FY2024, Column C = FY2025 (oldest left, newest right)
+**Column layout:** Column B = FY2024, Column C = FY2025 (oldest left, newest right). Key Ratios sheet has year headers in row 4; main statement sheets (BS, IS, CF) and note sheets have year headers in row 3.
 
 ---
 
@@ -176,17 +176,24 @@ The opening balance at January 1, 2024 in the workbook was **corrected** in Run 
 | Item | Previous (wrong) | Corrected |
 |---|---|---|
 | Total Equity, Dec 31, 2023 (opening 2024) | 969,843,329,191 | **742,645,974,247** |
+| Modal Saham opening | 225,532,800,700 | **225,532,128,700** |
+| Tambahan Modal Disetor opening | 267,141,291,040 | **267,141,192,041** |
+| Sub-total ekuitas induk opening | 969,349,182,878 | **740,562,076,061** |
+| Kepentingan Nonpengendali opening | 494,146,313 | **2,083,898,186** |
+
+Reconciliation 2024 (now passes): opening 742,645,974,247 + movements 227,197,354,944 = closing 969,843,329,191.
 
 ---
 
 ## Warnings & Caveats
 
-1. **Note sub-line data (2024):** Detailed sub-line values within note sheets were not extracted for FY2024. The main statement totals (BS, IS, CF) are fully populated and validated. Note sheets show the 2024 year header and carry a comment directing to the 2024 PDF for detail.
+1. **Note sub-line data (2024):** Sub-line values were extracted for Note 4 (Cash) and Note 5 (Trade Receivables) and reconcile to the Balance Sheet. For the remaining note sheets, the 2024 column carries the year header plus a cell comment pointing to the source page in the 2024 PDF; main statement totals (BS, IS, CF) are fully populated and validated.
 2. **2024 NCI:** Non-controlling interests had **net losses** in 2024 (NCI net profit = −1,908,308,511), reducing consolidated net profit.
 3. **2024 equity structure:** "Saldo laba" is a single line in 2024 (not split into appropriated/unappropriated as in 2025). Mapped to the "unappropriated" row with a comment.
 4. **Cash comparison:** Cash at Dec 31, 2024 = IDR 18.5B vs Dec 31, 2025 = IDR 6.16T — the massive increase reflects the PMTHMETD I capital raise and new bond/sukuk issuances in 2025.
 5. **Equity jump (2024→2025):** Total equity grew 778% from IDR 970B to IDR 8.52T due to PMTHMETD I new share issuance (IDR 5.6T) and subsidiary capital injection (IDR 1T) in 2025.
-6. **Equity pages 2025:** Pages 240–241 of the 2025 Annual Report use a mirrored/rotated layout (see `lesson.md` Lesson 3). Opening balance was reconstructed; this was corrected in Run 2 using the 2024 Annual Report source.
+6. **Equity pages 2025:** Pages 240–241 of the 2025 Annual Report use a mirrored/rotated layout (see `lesson.md` Lesson 3). Opening balance was reconstructed; this was corrected in the re-executed Run 2 using the 2024 Annual Report source. The 2024 movement rows for "Selisih nilai transaksi nonpengendali" and retained earnings appropriation were cleared because they are not present in the 2024 AR (artifacts from the 2025 comparative column).
+7. **Equity column folding:** Per lesson #16, the "Uang Muka Setoran Modal" component (Rp 71.8B opening 2024, fully converted to APIC during 2024) is folded into the combined "Selisih & Saldo Laba" column of the existing equity template; cell comments document the composition.
 
 ---
 

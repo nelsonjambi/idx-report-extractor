@@ -239,3 +239,82 @@ The 2024 Annual Report equity statement had a dedicated "Uang Muka Setoran Modal
 | 14 | Many BS line items absent in earlier year | Nine empty rows | Empty + comment is correct; total balance check confirms |
 | 15 | Retained earnings splits between years | Unmappable rows | Map single "Saldo laba" to unappropriated row; leave appropriated empty |
 | 16 | Advance for stock subscription column not in template | Opening equity sub-total mismatch | Fold into combined equity column; document in comment |
+
+---
+
+## Run 2 Re-execution — FY2024 Append (2026-05-17)
+
+**Date:** 2026-05-17
+**Source:** `reports/WIFI_Annual_Report_2024.pdf` (339 pages)
+**Skill:** `skill/idx-excel-append-year.md`
+**Reason for re-run:** Inspection found the workbook contained only 2025 data even though `README-001-wifi.md` and `lesson.md` had already been written as if Run 2 was complete. The earlier extraction artifacts (script + populated workbook) were not present in the repository, so Run 2 had to be performed again on the existing 2025-only workbook.
+
+---
+
+## 17. Documentation can drift ahead of the workbook state
+
+**What happened:**
+On opening, `README-001-wifi.md` claimed "Run 2 ✅ Complete" and `lesson.md` already listed lessons #9-16 from a Run 2 that had never persisted. The workbook itself had only 2025 in column B — no 2024 column, no equity correction, no note headers. The README also referenced `append_2024_wifi.py` as a checked-in artifact, but no such file existed.
+
+**Fix / rule to add:**
+- Treat the workbook as the source of truth for "what is done." Documentation is a description that can drift; inspect the actual file state before assuming a phase ran.
+- For each append run, the very first Phase 0 step should print `wb.sheetnames` and the year headers found in each main sheet, and compare against the README's "Years in File" claim. If they disagree, surface the discrepancy to the user before proceeding.
+- After completing an append, commit the workbook AND the extraction script in the same commit so future readers cannot find the doc updated without the data.
+
+---
+
+## 18. Existing 2024 movement rows in equity sheet contain artefacts from the 2025 comparative
+
+**What happened:**
+The pre-existing `Changes in Equity` sheet had rows 5-13 covering "2024" movements that were populated by Run 1 from the 2025 AR's comparative column. Per lesson #10, the opening balance was the wrong total (969B instead of 742B). Additionally, two rows had movements that do not appear in the 2024 AR at all:
+- Row 9: "Selisih nilai transaksi nonpengendali" −73,728,138 — NCI transaction difference first appears as −312,728,138 in 2025 only.
+- Row 12: "Ditentukan penggunaannya" (appropriation of retained earnings) — appropriation row first appears in 2025; 2024 has a single "Saldo laba" line.
+
+After correcting opening balance, the reconciliation (opening + movements = closing) was still off by exactly the row-9 amount (73,728,138).
+
+**Fix / rule to add:**
+- When appending an older year that had its movement rows pre-populated from a newer year's comparative column, audit each movement row against the older year's own AR. If a row is not present in the older AR, clear its values for that year and attach a cell comment.
+- Validate `opening + movements = closing` for every year before declaring success; do not rely on the closing balance alone matching the AR (closing can be correct while intermediate rows are noise).
+
+---
+
+## 19. Key Ratios sheet has year headers in a different row from data sheets
+
+**What happened:**
+After `insert_cols(2)` on `Key Ratios Summary`, the script wrote the new year header to row 3 (matching BS/IS/CF). Visual inspection showed "2024" floated above the "Rasio / Ratio | 2025 | Formula / Notes" header row 4 — misaligned with the existing year column.
+
+**Fix / rule to add:**
+- Before writing a new year header, inspect the sheet's existing header layout. The Key Ratios sheet has its column headers at row 4, not row 3 like the main statements.
+- Generalize: locate the row containing the existing year label and write the new year header in the same row. Do not hardcode "row 3."
+
+---
+
+## 20. Income Statement template was missing the FX translation OCI row used in 2024
+
+**What happened:**
+The 2024 IS does not include "Selisih kurs penjabaran laporan keuangan / Exchange difference on translation" (it appears for the first time in 2025). The 2024 column was correctly left empty for row 25 with comment. No fabrication; just confirming that absence is the right outcome.
+
+**Fix / rule to add:**
+- For OCI items, expect divergence: companies add new OCI lines as their foreign exposure or remeasurement scope changes. The presence/absence of a single OCI row should not block validation as long as the OCI subtotal matches.
+
+---
+
+## 21. Receivables Days computed from BS net vs. PDF Sub-total can differ slightly
+
+**What happened:**
+For Note 5 (Trade Receivables) 2024, the BS shows net 136,493,664,425 (after allowance −2,195,416,449). When computing Receivables Days, used the net BS number (matches the asset shown on BS). Sub-total before allowance is 138,689,080,874. Both numbers reconcile to the PDF.
+
+**Fix / rule to add:**
+- Use the BS-reported net for Receivables Days (consistent with how the asset is presented). Document the choice in the ratio formula notes so future cross-year comparisons are computed identically.
+
+---
+
+## Summary Table — Run 2 Re-execution (FY2024)
+
+| # | Lesson | Impact | Mitigation |
+|---|---|---|---|
+| 17 | README/lesson docs drifted ahead of actual workbook state | Misleading "done" status | Inspect workbook first; commit artifacts together with docs |
+| 18 | Pre-existing 2024 movement rows had 2025-comparative artefacts | Equity reconciliation broke | Clear non-existent movements; validate opening+movements=closing |
+| 19 | Key Ratios year header row differs from main statements | Misaligned year label | Detect existing-year-row dynamically, do not hardcode row 3 |
+| 20 | 2024 IS lacks FX translation OCI row present in 2025 | Empty cell expected | Validate via OCI subtotal, not row-level presence |
+| 21 | BS net vs Sub-total receivables choice affects ratio | Ratio inconsistency risk | Use BS net consistently; document in ratio formula |
