@@ -239,3 +239,167 @@ The 2024 Annual Report equity statement had a dedicated "Uang Muka Setoran Modal
 | 14 | Many BS line items absent in earlier year | Nine empty rows | Empty + comment is correct; total balance check confirms |
 | 15 | Retained earnings splits between years | Unmappable rows | Map single "Saldo laba" to unappropriated row; leave appropriated empty |
 | 16 | Advance for stock subscription column not in template | Opening equity sub-total mismatch | Fold into combined equity column; document in comment |
+
+---
+
+## Run 2 Re-execution — FY2024 Append (2026-05-17)
+
+**Date:** 2026-05-17
+**Source:** `reports/WIFI_Annual_Report_2024.pdf` (339 pages)
+**Skill:** `skill/idx-excel-append-year.md`
+**Reason for re-run:** Inspection found the workbook contained only 2025 data even though `README-001-wifi.md` and `lesson.md` had already been written as if Run 2 was complete. The earlier extraction artifacts (script + populated workbook) were not present in the repository, so Run 2 had to be performed again on the existing 2025-only workbook.
+
+---
+
+## 17. Documentation can drift ahead of the workbook state
+
+**What happened:**
+On opening, `README-001-wifi.md` claimed "Run 2 ✅ Complete" and `lesson.md` already listed lessons #9-16 from a Run 2 that had never persisted. The workbook itself had only 2025 in column B — no 2024 column, no equity correction, no note headers. The README also referenced `append_2024_wifi.py` as a checked-in artifact, but no such file existed.
+
+**Fix / rule to add:**
+- Treat the workbook as the source of truth for "what is done." Documentation is a description that can drift; inspect the actual file state before assuming a phase ran.
+- For each append run, the very first Phase 0 step should print `wb.sheetnames` and the year headers found in each main sheet, and compare against the README's "Years in File" claim. If they disagree, surface the discrepancy to the user before proceeding.
+- After completing an append, commit the workbook AND the extraction script in the same commit so future readers cannot find the doc updated without the data.
+
+---
+
+## 18. Existing 2024 movement rows in equity sheet contain artefacts from the 2025 comparative
+
+**What happened:**
+The pre-existing `Changes in Equity` sheet had rows 5-13 covering "2024" movements that were populated by Run 1 from the 2025 AR's comparative column. Per lesson #10, the opening balance was the wrong total (969B instead of 742B). Additionally, two rows had movements that do not appear in the 2024 AR at all:
+- Row 9: "Selisih nilai transaksi nonpengendali" −73,728,138 — NCI transaction difference first appears as −312,728,138 in 2025 only.
+- Row 12: "Ditentukan penggunaannya" (appropriation of retained earnings) — appropriation row first appears in 2025; 2024 has a single "Saldo laba" line.
+
+After correcting opening balance, the reconciliation (opening + movements = closing) was still off by exactly the row-9 amount (73,728,138).
+
+**Fix / rule to add:**
+- When appending an older year that had its movement rows pre-populated from a newer year's comparative column, audit each movement row against the older year's own AR. If a row is not present in the older AR, clear its values for that year and attach a cell comment.
+- Validate `opening + movements = closing` for every year before declaring success; do not rely on the closing balance alone matching the AR (closing can be correct while intermediate rows are noise).
+
+---
+
+## 19. Key Ratios sheet has year headers in a different row from data sheets
+
+**What happened:**
+After `insert_cols(2)` on `Key Ratios Summary`, the script wrote the new year header to row 3 (matching BS/IS/CF). Visual inspection showed "2024" floated above the "Rasio / Ratio | 2025 | Formula / Notes" header row 4 — misaligned with the existing year column.
+
+**Fix / rule to add:**
+- Before writing a new year header, inspect the sheet's existing header layout. The Key Ratios sheet has its column headers at row 4, not row 3 like the main statements.
+- Generalize: locate the row containing the existing year label and write the new year header in the same row. Do not hardcode "row 3."
+
+---
+
+## 20. Income Statement template was missing the FX translation OCI row used in 2024
+
+**What happened:**
+The 2024 IS does not include "Selisih kurs penjabaran laporan keuangan / Exchange difference on translation" (it appears for the first time in 2025). The 2024 column was correctly left empty for row 25 with comment. No fabrication; just confirming that absence is the right outcome.
+
+**Fix / rule to add:**
+- For OCI items, expect divergence: companies add new OCI lines as their foreign exposure or remeasurement scope changes. The presence/absence of a single OCI row should not block validation as long as the OCI subtotal matches.
+
+---
+
+## 21. Receivables Days computed from BS net vs. PDF Sub-total can differ slightly
+
+**What happened:**
+For Note 5 (Trade Receivables) 2024, the BS shows net 136,493,664,425 (after allowance −2,195,416,449). When computing Receivables Days, used the net BS number (matches the asset shown on BS). Sub-total before allowance is 138,689,080,874. Both numbers reconcile to the PDF.
+
+**Fix / rule to add:**
+- Use the BS-reported net for Receivables Days (consistent with how the asset is presented). Document the choice in the ratio formula notes so future cross-year comparisons are computed identically.
+
+---
+
+## Summary Table — Run 2 Re-execution (FY2024)
+
+| # | Lesson | Impact | Mitigation |
+|---|---|---|---|
+| 17 | README/lesson docs drifted ahead of actual workbook state | Misleading "done" status | Inspect workbook first; commit artifacts together with docs |
+| 18 | Pre-existing 2024 movement rows had 2025-comparative artefacts | Equity reconciliation broke | Clear non-existent movements; validate opening+movements=closing |
+| 19 | Key Ratios year header row differs from main statements | Misaligned year label | Detect existing-year-row dynamically, do not hardcode row 3 |
+| 20 | 2024 IS lacks FX translation OCI row present in 2025 | Empty cell expected | Validate via OCI subtotal, not row-level presence |
+| 21 | BS net vs Sub-total receivables choice affects ratio | Ratio inconsistency risk | Use BS net consistently; document in ratio formula |
+
+---
+
+## Run 2 Pass 2 — FY2024 Note Detail Re-extraction (2026-05-18)
+
+**Date:** 2026-05-18
+**Source:** `reports/WIFI_Annual_Report_2024.pdf` (339 pages)
+**Skill:** `skill/idx-excel-append-year.md` Phase 4
+**Reason for re-run:** User flagged three gaps after Run 2: (a) Note Index column B showed Indonesian titles while column C showed English; (b) many renumbered notes (10 Fixed Assets, 19 Taxation, 41 Suppl CF, etc.) had empty 2024 columns even though detail tables exist in the 2024 AR; (c) Note 15 Accrued Expenses 2024 column had only the Total — detail line items (Retribusi 4.74B, Jasa profesional 333M, Utilitas 33M as 2024-only) were missing.
+
+---
+
+## 22. Run 1 stuffed identical content into adjacent note sheets
+
+**What happened:**
+Pass 2's first iteration over Notes 31-36 revealed that Run 1 had pasted the same Cost-of-Revenues content (rows 17-35) into Note 31 *and* Note 32 G&A, and pasted the same Other-Income/Finance content (rows 17-53) into all of Notes 33, 34, 35, 36. When the new extractor naively populated `2024` everywhere a label matched, the COGS-2024 value also appeared in Note 32 G&A's rows 17-35 (where it does not belong), and the Other-Income 2024 figures replicated across four sheets. The 2025 column was unaffected (already populated by Run 1), but it kept the same misplacement.
+
+**Fix / rule to add:**
+- Maintain a `TOPIC_ROW_RANGES` dict listing the row range that genuinely belongs to each sheet's topic. Auto-fill respects this range and leaves out-of-topic rows empty in the new year column.
+- Example mapping for this workbook:
+  | Sheet | Topic rows | Notes |
+  |---|---|---|
+  | Note 31 - COSTS OF REVENUES | 17-35 | COGS direct + indirect cost breakdown + totals |
+  | Note 32 - GENERAL AND ADMINISTR | 45-65 | G&A items only (rows 17-44 are stale COGS clones from Run 1) |
+  | Note 33 - OTHER INCOME (EXPENSE | 17-26 | Other income items + net |
+  | Note 34 - FINANCE INCOME | 27-33 | Finance income items |
+  | Note 35 - FINANCE COSTS | 36-46 | Finance cost items |
+  | Note 36 - EARNINGS PER SHARE | 48-53 | EPS rows |
+- Do not attempt to clean up the misplaced rows in the 2025 column on the append run — that is Run 1's bug and would risk losing verified data. Only constrain the new year's fill.
+- For future workbooks, Run 1 should verify that each note sheet contains only its own content before saving, preferably by parsing the note's title from the PDF and confirming row labels mention that topic.
+
+---
+
+## 23. PDF text often inserts spaces inside numbers and at the very start of words
+
+**What happened:**
+The 2024 AR's bilingual layout produces fragmented numeric tokens like `60.0 29.971.450 140.8 96.788.552` (two numbers split by stray spaces) and label tokens like `P eriklanan`, `T otal`, `S aldo` where the first letter is detached. A naive `\d+(?:\.\d+)+` regex misses these and the parser silently drops legitimate rows.
+
+**Fix / rule to add:**
+- Run a pre-pass `normalize_numbers(text)` that iteratively merges fragments:
+  ```python
+  # LEFT ends with .DD (partial group), RIGHT is 1 digit → merge ".DDD"
+  text = re.sub(r'(\d\.\d{2})\s+(\d)(?!\d)', r'\1\2', text)
+  # LEFT ends with .D (partial group), RIGHT is 2 digits → merge
+  text = re.sub(r'(\d\.\d)\s+(\d\d)(?!\d)', r'\1\2', text)
+  # Leading partial digit + space + main number ("2 58.619.980" → "258.619.980")
+  text = re.sub(r'(?<![\w.])(\d{1,2})\s+(\d{1,2}\.\d{3}(?:\.\d{3})*)\b', r'\1\2', text)
+  ```
+- Run iteratively until no further changes (sometimes multiple fragments compound).
+- For label fragmentation (`P eriklanan`), do not attempt to "un-fragment" — keyword matching is forgiving enough; just ensure short tokens (`P`, `T`, `S`) are filtered out by the `len(w) > 2` rule.
+- Validate: every note's parsed totals must match the cross-sheet BS/IS reference. The verification table in section "Cross-validation" below provides the canonical checks.
+
+---
+
+## 24. Generic-only labels in workbook fragments require hardcoded handling
+
+**What happened:**
+Workbook Column A frequently contains very generic labels like `"Total Total"`, `"Sub-total Sub-total"`, `"Pasal Article"`, `"(Catatan ) (Note )"` — both because Indonesian + English are concatenated and because Run 1's PDF parsing left these as residual fragments. A keyword-overlap matcher cannot reliably assign 2024 values to these rows because the PDF has many lines with matching keywords.
+
+**Fix / rule to add:**
+- Maintain a `_GENERIC_LABELS` set in the extractor that the matcher refuses to operate on. The verified totals for those rows come from a hardcoded `NOTE_2024_DATA` dict applied BEFORE the systematic matcher runs.
+- The hardcoded dict is the place to encode sign conventions that contradict the PDF (e.g., the 2024 PDF shows current tax positive but the workbook's IS-convention column requires negative). The systematic extractor preserves PDF signs; the hardcoded layer applies workbook-convention overrides.
+- The two layers together (hardcoded for ambiguous rows, systematic for unambiguous) give better coverage than either alone.
+
+---
+
+## 25. Multi-note pages need section-header-driven extraction
+
+**What happened:**
+Pages 287-289 of the 2024 AR each contain 2-4 note sections (e.g., Note 24 NCI + Note 25 Revenues both on page 287; Notes 26 COGS + 27 G&A + 28 Other Income + 29 Finance Income all on page 288). A simple page-range extractor for Note 27 included rows from Notes 26 and 28 as well, which then either matched to wrong workbook rows or got appended as bogus 2024-only items.
+
+**Fix / rule to add:**
+- During extraction, detect note-section headers in-page using `re.match(r'^\s*(\d{1,2})\.\s+[A-Z]{3,}', line)` (excluding "lanjutan"/"continued"). Track which note's section we're in and pass a `target_note=N` filter so only lines inside Note N's section are emitted.
+- Page ranges in metadata can be liberal (overlap is fine) because the section filter does the real boundary work.
+
+---
+
+## Summary Table — Run 2 Pass 2 (FY2024 Note Detail)
+
+| # | Lesson | Impact | Mitigation |
+|---|---|---|---|
+| 22 | Run 1 cloned identical content into adjacent note sheets | Wrong-topic rows in 2024 column | `TOPIC_ROW_RANGES` per-sheet whitelist |
+| 23 | PDF inserts whitespace inside numbers + at word starts | Numbers silently dropped | `normalize_numbers()` pre-pass; length-based label token filter |
+| 24 | Generic-only labels (e.g. "Total Total") cannot be matched | Auto-matcher attaches wrong values | `_GENERIC_LABELS` skip-list + hardcoded `NOTE_2024_DATA` layer |
+| 25 | Multi-note pages cause cross-note contamination | Bogus 2024-only rows | Section-header filter (`target_note=N`) inside extractor |
