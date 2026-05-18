@@ -381,25 +381,115 @@ Hidden    : _TopicRanges         ← [NEW]
 
 **Sheet naming:** `Note <N> - <Short English Title>` (max 31 chars).
 
-#### [NEW] Note Index sheet (reserved by Run 1)
+**Note Index belongs in Sheet 5.** Even though Run 1 is single-year,
+this sheet is reserved here so future appends only add a column to it —
+they never insert it. Full construction steps are in the dedicated
+section below.
 
-Even though Run 1 is single-year, create the Note Index sheet with one
-data column for this year. Use **English titles**; the original
-Indonesian title goes in a cell comment as
-`Indonesian title: <ID title>`. This is the format future appends will
-extend; setting it up now means no awkward language flip later.
+#### [NEW] Sheet 5 — Note Index (reserved by Run 1)
 
-Layout:
+The Note Index is a single permanent sheet that holds the cross-year
+reference of note titles. Run 1 **must** create it even though only one
+year of data exists yet — every future append simply adds one column to
+it instead of restructuring it. Failing to reserve this sheet in Run 1
+forces append runs to insert it later, which shifts every subsequent
+sheet's index and breaks any downstream tooling that references sheets
+positionally.
 
-| Row | Content |
-|---|---|
-| 1 | Title (merged) — `Note Title Index — Cross-Year Reference` |
-| 2 | Headers: `Note Number`, `<YEAR>` |
-| 3+ | One row per note sheet, English title in col B |
+**Position.** Immediately AFTER `Changes in Equity` and BEFORE
+`Note 1`. In openpyxl: create the sheet at the end with
+`wb.create_sheet('Note Index')`, then move it into position with
+`wb.move_sheet('Note Index', offset=...)` so its index equals
+`wb.sheetnames.index('Changes in Equity') + 1`.
 
-Freeze panes at A3. Column widths: A=14, B=55.
+**Layout.**
 
-#### Sheet 5+ : Note sheets
+| Row | Col A | Col B | Notes |
+|---|---|---|---|
+| 1 | `Note Title Index — Cross-Year Reference` | (merged into A1:B1) | Bold, size 12, centred |
+| 2 | `Note Number` | `<YEAR>` | Bold, light-gray fill `#DDDDDD` |
+| 3 | `Note 1` | English title of Note 1 in this year | English title in col B; Indonesian title attached as cell comment |
+| 4 | `Note 2` | English title of Note 2 in this year | … |
+| …  | one row per note sheet | … | … |
+
+Append-year runs will insert a new column at position B (for an older
+year added to the left) or to the right (for a newer year added to the
+right), re-merging row 1 across the widened range and re-bolding row 2.
+The Run 1 layout MUST be consistent with that contract: row 1 merged,
+row 2 headers, data starting row 3, one row per note sheet in workbook
+order.
+
+**Construction steps.**
+
+```python
+from openpyxl.comments import Comment
+from openpyxl.styles import Font, Alignment, PatternFill
+
+# 1. Build the per-note title list in workbook order.
+#    NOTE_MATCH below is the same ordered list the note sheets were
+#    created from in Phase 4/5. Each entry: (sheet_name, title_id_in_year,
+#    title_en_in_year). For Run 1, every sheet has data; for later
+#    append runs, a sheet may be missing from this year — record None.
+NOTE_MATCH = [
+    ('Note 1 - GENERAL',                 'UMUM',                            'GENERAL'),
+    ('Note 2 - SIGNIFICANT ACCOUNTING',  'INFORMASI KEBIJAKAN AKUNTANSI…',  'MATERIAL ACCOUNTING POLICY INFORMATION'),
+    # … one entry per note sheet, in the order the sheets sit in the workbook
+]
+
+# 2. Create and position the sheet.
+if 'Note Index' in wb.sheetnames:
+    del wb['Note Index']
+idx = wb.create_sheet('Note Index')
+ce_idx = wb.sheetnames.index('Changes in Equity')
+wb.move_sheet(idx, offset=-(len(wb.sheetnames) - 1 - ce_idx - 1))
+
+# 3. Row 1 — title (merged across A1:B1).
+idx['A1'] = 'Note Title Index — Cross-Year Reference'
+idx['A1'].font = Font(bold=True, size=12)
+idx['A1'].alignment = Alignment(horizontal='center')
+idx.merge_cells('A1:B1')
+
+# 4. Row 2 — headers.
+idx['A2'] = 'Note Number'
+idx['B2'] = str(YEAR)                                # e.g. '2025'
+for c in ('A2', 'B2'):
+    idx[c].font = Font(bold=True)
+    idx[c].fill = PatternFill('solid', fgColor='DDDDDD')
+
+# 5. Rows 3+ — one row per note sheet.
+for i, (sheet_name, title_id, title_en) in enumerate(NOTE_MATCH):
+    r = 3 + i
+    idx.cell(row=r, column=1, value=sheet_name.split(' - ')[0])  # "Note 1"
+    cell = idx.cell(row=r, column=2, value=title_en)
+    cell.comment = Comment(f'Indonesian title: {title_id}', 'Run1')
+
+# 6. Column widths + freeze panes.
+idx.column_dimensions['A'].width = 14
+idx.column_dimensions['B'].width = 55
+idx.freeze_panes = 'A3'
+```
+
+**Why English in column B even in Run 1.** Putting Indonesian here in
+Run 1 forces a subsequent append run to either flip the column language
+(creating an asymmetric `Indonesian for Year-N | English for Year-N+1`
+table — visually inconsistent and confusing for readers) or do a
+breaking schema migration to swap them. English in every year column
+with Indonesian in cell comments is the contract that future runs will
+extend; setting it now means no later cleanup.
+
+**Validation.** After construction, verify:
+
+- Row 1 is merged across A1:B1 with the exact title text.
+- Row 2 headers are present and bold.
+- Number of rows from row 3 to the last populated row equals the number
+  of note sheets in the workbook (one-to-one).
+- Every row 3+ has both column A (`Note N`) and column B (English title)
+  populated, and column B has a non-empty cell comment containing the
+  Indonesian title.
+- Sheet position: `wb.sheetnames.index('Note Index') ==
+  wb.sheetnames.index('Changes in Equity') + 1`.
+
+#### Sheet 6+ : Note sheets
 
 **[FIXED]** Each note sheet contains ONLY the rows extracted for THAT
 note via the section-header filter. Never copy parsed rows into
