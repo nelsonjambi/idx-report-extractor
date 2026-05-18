@@ -14,6 +14,7 @@
 |---|---|---|---|---|
 | Run 1 | `idx-excel-run1-template.md` | `WIFI_Annual_Report_2025.pdf` (414 pp) | 2025 | ✅ Complete |
 | Run 2 | `idx-excel-append-year.md` | `WIFI_Annual_Report_2024.pdf` (339 pp) | 2024 | ✅ Complete (re-executed 2026-05-17) |
+| Run 2 pass 2 | `append_2024_notes.py` (re-write) | same | 2024 | ✅ Complete (2026-05-18) — Note Index English; systematic 2024 sub-line extraction |
 
 ---
 
@@ -188,7 +189,7 @@ Reconciliation 2024 (now passes): opening 742,645,974,247 + movements 227,197,35
 
 ## Warnings & Caveats
 
-1. **Note sub-line data (2024):** Sub-line values extracted and cross-validated against the Balance Sheet for: Note 4 (Cash), Note 5 (Trade Receivables), Note 7 (Prepaid Expenses), Note 8 (Advances), Note 13 (Trade Payables), Note 14 (Other Payables), Note 15 (Accrued Expenses), Note 16 (Advances from Customers), Note 17 (Lease Liabilities), Note 20 (Consumer Financing), Note 21 (Bank Loans), Note 22 (Bonds Payable), Note 23 (Loans), Note 24 (Due to Related Parties), Note 26 (Employee Benefits), Note 27 (Share Capital), Note 28 (APIC), Note 29 (NCI), Note 30 (Revenues), Note 31 (COGS), Note 33 (Other Income/Expense), Note 34 (Finance Income), Note 35 (Finance Costs), Note 36 (EPS). For narrative-only notes (1, 2, 3, 32, 37–44), the 2024 column carries the year header plus a cell comment pointing to the source page in the 2024 PDF.
+1. **Note sub-line data (2024):** The pass-2 systematic extractor (`append_2024_notes.py`) reads each renumbered note's 2024 page range in the 2024 PDF and matches PDF rows to existing workbook labels via keyword overlap, with a topic-range guard (Note 32 G&A is restricted to rows 45-65 to avoid contaminating it with stale Note 31 COGS rows that Run 1 mistakenly cloned into the sheet — see `lesson.md` lesson #22). Hardcoded values are applied first for the verified Balance-Sheet/Income-Statement totals; the systematic extractor fills remaining rows; unmatched PDF rows are appended at the bottom of each sheet as 2024-only items under an italic "Baris berikut hanya muncul di Laporan Tahunan 2024" footnote. The Note Index sheet (sheet #5) uses **English titles in both 2024 and 2025 columns** with the original Indonesian title preserved as a cell comment. Narrative-only notes (1, 2, 3, 33 Financial Instruments, 34 Risk Management, 39 Amendments) are skipped from auto-extraction. Sub-line data is cross-validated against the Balance Sheet for: Note 4, 5, 7, 8, 10, 11, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 40, 41.
 2. **2024 NCI:** Non-controlling interests had **net losses** in 2024 (NCI net profit = −1,908,308,511), reducing consolidated net profit.
 3. **2024 equity structure:** "Saldo laba" is a single line in 2024 (not split into appropriated/unappropriated as in 2025). Mapped to the "unappropriated" row with a comment.
 4. **Cash comparison:** Cash at Dec 31, 2024 = IDR 18.5B vs Dec 31, 2025 = IDR 6.16T — the massive increase reflects the PMTHMETD I capital raise and new bond/sukuk issuances in 2025.
@@ -211,8 +212,9 @@ idx-report-extractor/
 │   └── idx-excel-quarterly.md
 ├── WIFI_Financial_Statements.xlsx          # Output workbook (49 sheets, 2 years)
 ├── WIFI_Financial_Statements_backup_before_2024.xlsx  # Backup before Run 2
-├── append_2024_wifi.py                    # Run 2 extraction script
+├── append_2024_wifi.py                    # Run 2 main-statement script
+├── append_2024_notes.py                   # Run 2 pass-2 notes extractor (systematic + hardcoded totals)
 ├── extract_wifi_fs.py                     # Run 1 extraction script
-├── lesson.md                              # Lessons learned (FY2025 extraction)
+├── lesson.md                              # Lessons learned (FY2025 + FY2024 extractions)
 └── README-001-wifi.md                     # This file
 ```

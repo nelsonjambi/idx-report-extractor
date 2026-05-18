@@ -318,3 +318,88 @@ For Note 5 (Trade Receivables) 2024, the BS shows net 136,493,664,425 (after all
 | 19 | Key Ratios year header row differs from main statements | Misaligned year label | Detect existing-year-row dynamically, do not hardcode row 3 |
 | 20 | 2024 IS lacks FX translation OCI row present in 2025 | Empty cell expected | Validate via OCI subtotal, not row-level presence |
 | 21 | BS net vs Sub-total receivables choice affects ratio | Ratio inconsistency risk | Use BS net consistently; document in ratio formula |
+
+---
+
+## Run 2 Pass 2 — FY2024 Note Detail Re-extraction (2026-05-18)
+
+**Date:** 2026-05-18
+**Source:** `reports/WIFI_Annual_Report_2024.pdf` (339 pages)
+**Skill:** `skill/idx-excel-append-year.md` Phase 4
+**Reason for re-run:** User flagged three gaps after Run 2: (a) Note Index column B showed Indonesian titles while column C showed English; (b) many renumbered notes (10 Fixed Assets, 19 Taxation, 41 Suppl CF, etc.) had empty 2024 columns even though detail tables exist in the 2024 AR; (c) Note 15 Accrued Expenses 2024 column had only the Total — detail line items (Retribusi 4.74B, Jasa profesional 333M, Utilitas 33M as 2024-only) were missing.
+
+---
+
+## 22. Run 1 stuffed identical content into adjacent note sheets
+
+**What happened:**
+Pass 2's first iteration over Notes 31-36 revealed that Run 1 had pasted the same Cost-of-Revenues content (rows 17-35) into Note 31 *and* Note 32 G&A, and pasted the same Other-Income/Finance content (rows 17-53) into all of Notes 33, 34, 35, 36. When the new extractor naively populated `2024` everywhere a label matched, the COGS-2024 value also appeared in Note 32 G&A's rows 17-35 (where it does not belong), and the Other-Income 2024 figures replicated across four sheets. The 2025 column was unaffected (already populated by Run 1), but it kept the same misplacement.
+
+**Fix / rule to add:**
+- Maintain a `TOPIC_ROW_RANGES` dict listing the row range that genuinely belongs to each sheet's topic. Auto-fill respects this range and leaves out-of-topic rows empty in the new year column.
+- Example mapping for this workbook:
+  | Sheet | Topic rows | Notes |
+  |---|---|---|
+  | Note 31 - COSTS OF REVENUES | 17-35 | COGS direct + indirect cost breakdown + totals |
+  | Note 32 - GENERAL AND ADMINISTR | 45-65 | G&A items only (rows 17-44 are stale COGS clones from Run 1) |
+  | Note 33 - OTHER INCOME (EXPENSE | 17-26 | Other income items + net |
+  | Note 34 - FINANCE INCOME | 27-33 | Finance income items |
+  | Note 35 - FINANCE COSTS | 36-46 | Finance cost items |
+  | Note 36 - EARNINGS PER SHARE | 48-53 | EPS rows |
+- Do not attempt to clean up the misplaced rows in the 2025 column on the append run — that is Run 1's bug and would risk losing verified data. Only constrain the new year's fill.
+- For future workbooks, Run 1 should verify that each note sheet contains only its own content before saving, preferably by parsing the note's title from the PDF and confirming row labels mention that topic.
+
+---
+
+## 23. PDF text often inserts spaces inside numbers and at the very start of words
+
+**What happened:**
+The 2024 AR's bilingual layout produces fragmented numeric tokens like `60.0 29.971.450 140.8 96.788.552` (two numbers split by stray spaces) and label tokens like `P eriklanan`, `T otal`, `S aldo` where the first letter is detached. A naive `\d+(?:\.\d+)+` regex misses these and the parser silently drops legitimate rows.
+
+**Fix / rule to add:**
+- Run a pre-pass `normalize_numbers(text)` that iteratively merges fragments:
+  ```python
+  # LEFT ends with .DD (partial group), RIGHT is 1 digit → merge ".DDD"
+  text = re.sub(r'(\d\.\d{2})\s+(\d)(?!\d)', r'\1\2', text)
+  # LEFT ends with .D (partial group), RIGHT is 2 digits → merge
+  text = re.sub(r'(\d\.\d)\s+(\d\d)(?!\d)', r'\1\2', text)
+  # Leading partial digit + space + main number ("2 58.619.980" → "258.619.980")
+  text = re.sub(r'(?<![\w.])(\d{1,2})\s+(\d{1,2}\.\d{3}(?:\.\d{3})*)\b', r'\1\2', text)
+  ```
+- Run iteratively until no further changes (sometimes multiple fragments compound).
+- For label fragmentation (`P eriklanan`), do not attempt to "un-fragment" — keyword matching is forgiving enough; just ensure short tokens (`P`, `T`, `S`) are filtered out by the `len(w) > 2` rule.
+- Validate: every note's parsed totals must match the cross-sheet BS/IS reference. The verification table in section "Cross-validation" below provides the canonical checks.
+
+---
+
+## 24. Generic-only labels in workbook fragments require hardcoded handling
+
+**What happened:**
+Workbook Column A frequently contains very generic labels like `"Total Total"`, `"Sub-total Sub-total"`, `"Pasal Article"`, `"(Catatan ) (Note )"` — both because Indonesian + English are concatenated and because Run 1's PDF parsing left these as residual fragments. A keyword-overlap matcher cannot reliably assign 2024 values to these rows because the PDF has many lines with matching keywords.
+
+**Fix / rule to add:**
+- Maintain a `_GENERIC_LABELS` set in the extractor that the matcher refuses to operate on. The verified totals for those rows come from a hardcoded `NOTE_2024_DATA` dict applied BEFORE the systematic matcher runs.
+- The hardcoded dict is the place to encode sign conventions that contradict the PDF (e.g., the 2024 PDF shows current tax positive but the workbook's IS-convention column requires negative). The systematic extractor preserves PDF signs; the hardcoded layer applies workbook-convention overrides.
+- The two layers together (hardcoded for ambiguous rows, systematic for unambiguous) give better coverage than either alone.
+
+---
+
+## 25. Multi-note pages need section-header-driven extraction
+
+**What happened:**
+Pages 287-289 of the 2024 AR each contain 2-4 note sections (e.g., Note 24 NCI + Note 25 Revenues both on page 287; Notes 26 COGS + 27 G&A + 28 Other Income + 29 Finance Income all on page 288). A simple page-range extractor for Note 27 included rows from Notes 26 and 28 as well, which then either matched to wrong workbook rows or got appended as bogus 2024-only items.
+
+**Fix / rule to add:**
+- During extraction, detect note-section headers in-page using `re.match(r'^\s*(\d{1,2})\.\s+[A-Z]{3,}', line)` (excluding "lanjutan"/"continued"). Track which note's section we're in and pass a `target_note=N` filter so only lines inside Note N's section are emitted.
+- Page ranges in metadata can be liberal (overlap is fine) because the section filter does the real boundary work.
+
+---
+
+## Summary Table — Run 2 Pass 2 (FY2024 Note Detail)
+
+| # | Lesson | Impact | Mitigation |
+|---|---|---|---|
+| 22 | Run 1 cloned identical content into adjacent note sheets | Wrong-topic rows in 2024 column | `TOPIC_ROW_RANGES` per-sheet whitelist |
+| 23 | PDF inserts whitespace inside numbers + at word starts | Numbers silently dropped | `normalize_numbers()` pre-pass; length-based label token filter |
+| 24 | Generic-only labels (e.g. "Total Total") cannot be matched | Auto-matcher attaches wrong values | `_GENERIC_LABELS` skip-list + hardcoded `NOTE_2024_DATA` layer |
+| 25 | Multi-note pages cause cross-note contamination | Bogus 2024-only rows | Section-header filter (`target_note=N`) inside extractor |
