@@ -186,9 +186,10 @@ The existing Excel has row labels in Column A. For each label:
 
 This is consistent with General Rules 6 & 7: existing rows stay untouched, new rows are additive.
 
-### Phase 3 — Notes Index & Matching
+### Phase 3 — Note Index Sheet & Note Matching
 
 This is the most critical phase. Note numbers shift between years.
+A permanent **Note Index sheet** tracks all note titles across every appended year.
 
 #### Step 3a: Build the new year's note index
 
@@ -257,29 +258,252 @@ Add an italic footnote row at the bottom of the sheet:
  Note: In [YEAR], this item was numbered Note [N]"
 ```
 
+#### Step 3d: Maintain the Note Index sheet
+
+The **Note Index** sheet is a permanent cross-year reference. It lives between
+'Changes in Equity' and 'Note 1'. Each row represents one note sheet in the workbook.
+Each year adds **one** column showing the note title used in that year.
+
+**Layout:**
+
+| Column | Content |
+|---|---|
+| A | Note Number (e.g. `Note 1`, `Note 6`, `Note 25`) |
+| B+ | One column per fiscal year (header = year, value = note title in that year) |
+
+Year columns follow the same chronological convention as data sheets:
+**oldest year on the LEFT, newest year on the RIGHT.** When appending an older year,
+insert the column at the LEFT (before existing year columns). When appending a
+newer year, insert at the RIGHT.
+
+**On Run 1 (when the workbook is first created):**
+
+```
+1. Create sheet named "Note Index"
+2. Position it immediately after 'Changes in Equity' and before 'Note 1'
+3. Row 1 (merged A1:last_col): "Note Title Index — Cross-Year Reference"
+4. Row 2: Column headers
+   A: "Note Number"
+   B: "[YEAR]"   (e.g. "2025")
+5. Rows 3+: one row per note sheet in workbook order
+   - A: note number label (e.g. "Note 1")
+   - B: note title for that year (use English title from the PDF, or the workbook
+        sheet's English title if it matches the PDF)
+6. Bold row 2 headers; freeze top 2 rows
+```
+
+**On each append run:**
+
+```
+1. Locate the existing Note Index sheet
+2. Determine insert position based on chronological order of the new year vs existing columns:
+   → If new_year < min(existing_years): INSERT new column at position B (left of all years)
+   → If new_year > max(existing_years): APPEND new column to the right
+   → If new_year is between: INSERT at correct chronological position
+3. Set the header cell to the new year (e.g. "2024")
+4. For each existing row (one per note sheet):
+   a. Look up whether that sheet was matched to a note in the new year (from Step 3b)
+   b. If matched: write the English title from the new year PDF
+   c. If NOT matched: leave the cell empty
+      Add cell comment: "Note not present in [NEW_YEAR] report"
+5. For new notes in the new year that have NO matching sheet in the template:
+   a. Create a new note sheet (handled in Step 3b)
+   b. Add a new row at the bottom of the index for that sheet
+   c. Fill the new year's column with the title
+   d. Leave all existing year columns empty for that row
+6. Extend the Row 1 merged range to cover all year columns
+```
+
+**Index sheet layout example (after appending 2024 to a 2025 workbook):**
+
+```
+| Note Number | 2024              | 2025                |
+|-------------|-------------------|---------------------|
+| Note 1      | GENERAL           | GENERAL             |
+| Note 4      | CASH              | CASH                |
+| Note 6      |                   | INVENTORIES         |
+| Note 7      | PREPAID EXPENSES  | PREPAID EXPENSES    |
+| Note 25     |                   | SHARIA BONDS        |
+```
+
+Empty cells mean the note is absent in that year. The "Note Number" in column A
+uses the workbook's note sheet numbering (which is fixed once the first run
+creates the sheets). Cross-year note-number shifts are captured by the
+per-sheet renumbering footnote (Step 3c), not by the index.
+
+**Index sheet layout example (after later appending 2026):**
+
+```
+| Note Number | 2024              | 2025                | 2026                |
+|-------------|-------------------|---------------------|---------------------|
+| Note 1      | GENERAL           | GENERAL             | GENERAL             |
+| Note 6      |                   | INVENTORIES         | INVENTORIES         |
+| Note 7      | PREPAID EXPENSES  | PREPAID EXPENSES    | INVENTORIES         |
+```
+
+If a note number ends up with a different title in a later year (e.g. the
+report restructured its notes), the index makes the divergence visible at a glance.
+
 ### Phase 4 — Notes Content Extraction & Insertion
 
-For each matched note:
+**Every matched note sheet must have its sub-line values populated for the new year.**
+Only leaving the year column header filled (with no sub-line data) is NOT acceptable —
+it defeats the purpose of a multi-year workbook.
+
+For each matched note (identified in Phase 3b):
 
 ```
-1. Extract content from the new PDF (same approach as Run 1: tabular vs narrative)
-2. Match rows to existing Column A labels in the sheet
-3. Insert the new year's values into the new column
-4. For rows that exist in the new year but not in the sheet → insert new rows
-5. For rows that exist in the sheet but not in the new year → leave empty + comment
+1. Identify the page range for this note in the new PDF (start_page to end_page)
+2. Extract full text from those pages using pdfplumber
+3. Parse into (label, value) pairs — see Parsing Strategy below
+4. Match each parsed row to existing Column A labels in the sheet — see Row Matching
+5. Insert values into the new year column for matched rows
+6. Insert new rows for PDF lines with no match in the sheet — see New Row Insertion
+7. Leave empty + comment for sheet rows with no match in PDF
+8. Add the year header in the correct header row (typically row 3, same row as other years)
 ```
 
-#### Table Reconciliation Rules
+#### Phase 4 Parsing Strategy
+
+Indonesian financial note tables typically have one of two layouts:
+
+**Layout A — Two-column table (label | value):**
+```
+Biaya dibayar dimuka - pihak ketiga        5.000.000.000
+Biaya sewa                                 3.500.000.000
+Biaya asuransi                             1.500.000.000
+Jumlah / Total                             5.000.000.000
+```
+→ Extract each label and its rightmost numeric value on the same line.
+
+**Layout B — Multi-column table (label | year_1 | year_2):**
+```
+                             2024              2023
+Biaya sewa                 3.500.000.000    3.100.000.000
+Biaya asuransi             1.500.000.000    1.200.000.000
+```
+→ Identify which column corresponds to the year being extracted.
+→ Extract ONLY the column for the target year. Ignore comparative year columns.
+
+**Parsing pseudocode:**
+```python
+def parse_note_table(pages_text, target_year):
+    rows = []
+    for line in pages_text.split('\n'):
+        # Skip decorative lines, empty lines, page headers
+        if is_empty_or_header(line):
+            continue
+        nums = extract_all_numbers(line)  # parse_id_number() on each token
+        label = extract_label(line)       # everything before first numeric token
+        if not nums or not label:
+            continue
+        if len(nums) == 1:
+            # Layout A: single value
+            rows.append((label.strip(), nums[0]))
+        elif len(nums) >= 2:
+            # Layout B: multi-column — use target_year column index
+            col_idx = resolve_year_column(pages_text, target_year)
+            rows.append((label.strip(), nums[col_idx]))
+    return rows
+```
+
+**IMPORTANT:** If the note is purely narrative (no table), leave the note sheet column
+populated only with the year header and add a sheet-level comment:
+`"Note [N] ([YEAR]): Narrative only — no tabular data to extract."`
+
+#### Phase 4 Row Matching
+
+For each existing row in Column A of the note sheet:
+
+```python
+def match_label(sheet_label, pdf_rows):
+    """
+    Returns (pdf_row_index, match_type) or None if not matched.
+    match_type: "exact" | "fuzzy" | "keyword"
+    """
+    norm_sheet = normalize(sheet_label)  # lowercase, strip, remove punctuation
+    
+    # Pass 1: Exact match (after normalization)
+    for i, (pdf_label, val) in enumerate(pdf_rows):
+        if normalize(pdf_label) == norm_sheet:
+            return (i, "exact")
+    
+    # Pass 2: One label is a substring of the other (handles truncation)
+    for i, (pdf_label, val) in enumerate(pdf_rows):
+        norm_pdf = normalize(pdf_label)
+        if norm_sheet in norm_pdf or norm_pdf in norm_sheet:
+            if len(min(norm_sheet, norm_pdf, key=len)) >= 8:  # avoid short spurious matches
+                return (i, "fuzzy")
+    
+    # Pass 3: Keyword overlap (at least 60% of significant words match)
+    for i, (pdf_label, val) in enumerate(pdf_rows):
+        if keyword_overlap(norm_sheet, normalize(pdf_label)) >= 0.6:
+            return (i, "keyword")
+    
+    return None  # no match found
+
+def normalize(s):
+    s = s.lower().strip()
+    s = re.sub(r'[^\w\s]', '', s)  # remove punctuation
+    s = re.sub(r'\s+', ' ', s)
+    return s
+
+def keyword_overlap(a, b):
+    STOP = {'dan', 'atau', 'yang', 'untuk', 'ke', 'dari', 'dengan', 'dalam',
+            'dan', 'the', 'and', 'or', 'of', 'to', 'from', 'for', 'in', 'on'}
+    words_a = set(a.split()) - STOP
+    words_b = set(b.split()) - STOP
+    if not words_a or not words_b:
+        return 0
+    return len(words_a & words_b) / max(len(words_a), len(words_b))
+```
+
+**When a match is found:**
+- Insert the PDF value into the new year's column for that row
+- If match_type is "fuzzy" or "keyword": add cell comment with original PDF label:
+  `"Matched from: '[PDF_LABEL]' in [YEAR] report"`
+- Mark the PDF row as used (consumed), so it is not matched again
+
+**When NO match is found for a sheet row:**
+- Leave the new year cell empty
+- Add cell comment: `"Not found in [YEAR] report — verify against PDF p.[PAGE_RANGE]"`
+
+#### New Row Insertion (Phase 4)
+
+For each PDF row that was NOT consumed by Phase 4 Row Matching:
+→ This is a line item that exists in the new year but has NO matching row in the sheet.
+→ INSERT a new row at the logical position.
+
+```
+Insertion rules:
+1. Find the section it belongs to (totals / sub-items / headers)
+2. Place new sub-items ABOVE their section total row
+3. Place new header/section rows at the section boundary
+4. Preserve vertical ordering from the PDF where possible
+
+New row format:
+   Column A: bilingual label "[Indonesian] / [English]"
+              If only Indonesian is available, append " / [translate or leave blank]"
+   New year column: the extracted value
+   All existing year column(s): leave empty
+   Comment on each empty existing-year cell: "Item not in [TEMPLATE_YEAR] report"
+
+Add an italic footnote row immediately below the new row:
+   "Row added from [NEW_YEAR] report — not present in [TEMPLATE_YEAR] data"
+```
+
+#### Table Reconciliation Reference
 
 | Situation | Action |
 |---|---|
-| Same label, same structure | Insert value in new column |
-| Label wording changed slightly | Match by meaning, add footnote with original wording |
-| Sub-row exists in new year but not template | Insert row, leave existing columns empty + comment |
-| Sub-row exists in template but not new year | Leave new year column empty + comment |
-| Table structure completely different | Create a separate sub-table below, labeled by year |
-| A note exists in new year but no matching sheet | Create new sheet, leave template year column empty |
-| A sheet exists but note not found in new year | Leave entire new year column empty + sheet-level comment |
+| Same label, exact match | Insert value in new year column |
+| Label wording slightly different | Match by meaning; comment with original wording |
+| Sub-row in new PDF but not in sheet | Insert new row; leave existing year columns empty + comment |
+| Sub-row in sheet but not in new PDF | Leave new year column empty + comment |
+| Note table structure completely different | Create a separate sub-table below with year label |
+| Note in new PDF but NO matching sheet | Create new sheet; leave template year column empty + comment |
+| Sheet exists but note NOT found in new PDF | Leave entire new year column empty + sheet-level comment |
+| Note is purely narrative (no table) | Year header only + sheet-level narrative comment |
 
 ### Phase 5 — Key Ratios Update
 
@@ -403,15 +627,27 @@ Financial Validation (new year):
   Cross: IS Net Profit ≈ Equity Net Profit : [PASS / FAIL]
   Cross: CF Cash End ≈ BS Cash             : [PASS / FAIL]
 
+Note Index Sheet:
+  Status       : [CREATED / UPDATED]
+  Column added : "[NEW_YEAR]" inserted [LEFT OF / RIGHT OF / BETWEEN] existing year columns
+  Total rows   : [N] note sheets tracked
+  Titles filled: [M] / [N] (cells empty where note is absent in [NEW_YEAR])
+
 Note Matching Results:
   [NEW_NOTE_NUM]. [TITLE] → matched to sheet "[SHEET_NAME]"
   [NEW_NOTE_NUM]. [TITLE] → matched to sheet "[SHEET_NAME]" (renumbered from Note [X])
   [NEW_NOTE_NUM]. [TITLE] → NEW SHEET CREATED (not in template)
   Sheet "[SHEET_NAME]" → note NOT FOUND in [YEAR] (column left empty)
 
+Note Sub-line Extraction Results (per matched note):
+  Note [N] "[SHEET_NAME]": [M] rows matched, [K] rows inserted (new in [YEAR]), [J] rows empty (not in [YEAR])
+  Note [N] "[SHEET_NAME]": narrative only — no tabular data
+  Note [N] "[SHEET_NAME]": [M] rows matched (all exact)
+
 Row Changes:
-  [N] new rows inserted across all sheets
+  [N] new rows inserted across all note sheets
   [N] cells left empty (data not available in this year)
+  [N] cells matched via fuzzy/keyword (see per-cell comments)
 
 Fallback Calculations Used:
   [LIST any values computed via fallback]
@@ -463,3 +699,7 @@ def parse_id_number(s: str) -> int | None:
 8. **Backup is your safety net** — if post-insertion integrity fails, restore from backup rather than trying to fix a corrupted workbook
 9. **Never use existing workbook values as source** — every number in the new column must come from the new PDF
 10. **Find the auditor's report first** — don't start extracting until you've confirmed which pages are the audited FS
+11. **Note sub-lines are required** — a note column with only the year header and empty sub-lines is incomplete; every matched note must have its tabular rows populated
+12. **Multi-column note tables are common** — the note table often shows two years side-by-side; always identify which column is the target year before extracting values
+13. **Note Index sheet must be updated on every run** — seeded on Run 1 with the first year's note data; extended on each append run with new year column group
+14. **Consumed tracking for row matching** — mark each PDF row as used after it matches a sheet row; unmatched PDF rows become new inserted rows; this prevents double-counting
